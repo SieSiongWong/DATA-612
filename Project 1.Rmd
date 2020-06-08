@@ -1,0 +1,194 @@
+---
+title: "Project 1"
+author: "Sie Siong Wong"
+date: "6/3/2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+theme: lumen
+---
+
+# Introduction
+
+This system recommends movies to users. The dataset used contains 10 users and 8 movies and was built by myself through excel random number generator. The rating scale for a movie is range from 1 to 5, where 1 is the lowest rating and 5 is the highest rating.
+
+# Load R Packages
+
+```{r, eval=TRUE, warning=FALSE, message=FALSE}
+
+# Load required packages
+library(tidyverse)
+
+```
+
+# Load Data
+
+```{r, eval=TRUE}
+
+# Load movie rating dataset
+movies_rating <- read.csv("https://raw.githubusercontent.com/SieSiongWong/DATA-612/master/Movies%20Rating%20Dataset.csv")
+
+head(movies_rating)
+
+```
+
+# User-Item Matrix
+
+```{r, eval=TRUE}
+
+# Gather the movies rating dataset from wide to long format
+movies_rating <- gather(movies_rating, "movie", "rating", -user)
+
+# Convert the rating dataset into matrix format
+user_item <- matrix(movies_rating$rating, nrow = length(unique(movies_rating$user)), byrow = FALSE, dimnames = list(c("U1","U2","U3","U4","U5","U6","U7","U8","U9","U10"),c("M1","M2","M3","M4","M5","M6","M7","M8")))
+
+```
+
+# Training & Test Datasets
+
+```{r, eval=TRUE}
+
+# Break the rating matrix into training and test datasets
+
+# Set the seed for random sampling
+set.seed(123)
+
+# Copy user item matrix dataset
+train <- user_item
+
+# Random sample for 10 elements as 0 for test dataset
+train[sample(1:length(train), 11, replace = FALSE)] <- 0
+
+# Test dataset
+test <- user_item - train
+test[test==0] <- NA
+
+# Training dataset
+train[train==0] <- NA 
+
+```
+
+# Raw Average
+
+```{r, eval=TRUE}
+
+# Calculate the raw average (mean) rating for every user-item combination.
+raw_average <- mean(train, na.rm = TRUE)
+
+raw_average
+
+```
+
+## RSME
+
+```{r, eval=TRUE}
+
+# Calculate the RMSE for raw average for both training and test datasets
+
+# Square error difference function
+se <- function(x) {  
+  ( x - raw_average ) ^ 2}
+
+# Training dataset RMSE
+train_RMSE <- sapply(train, se) %>% 
+  mean(na.rm = TRUE) %>%
+  sqrt()
+
+train_RMSE
+
+# Test dataset RMSE
+test_RMSE <- sapply(test, se) %>% 
+  mean(na.rm = TRUE) %>%
+  sqrt()
+
+test_RMSE
+
+```
+
+# Bias Calculation
+
+```{r, eval=TRUE}
+
+# Calculate the bias for each user and each movie using training dataset
+
+# Bias value for each user
+bias_users <- rowMeans(train, na.rm=TRUE) - raw_average
+
+bias_users
+
+# Bias value for each movie
+bias_movies <- colMeans(train, na.rm=TRUE) - raw_average
+
+bias_movies
+
+```
+
+# Baseline Predictor
+
+```{r, eval=TRUE}
+
+# Calculate the baseline predictors for every user-movie combination
+baseline_pred <- expand.grid(bias_users, bias_movies) %>% 
+  
+  # Sum both user and movie bias and raw average for each combination
+  mutate(baseline = Var1 + Var2 + raw_average) %>% 
+  
+  # Replace baseline predictor value greater than 5 equal to 5
+  mutate(baseline = replace(baseline, baseline > 5, 5)) %>%
+  
+  # Select the baseline column
+  select(baseline)
+
+# Convert the baseline column into matrix format
+baseline_pred <- matrix(baseline_pred$baseline, nrow = 10, ncol = 8, byrow = TRUE)
+
+# Add dimension names to the matrix
+dimnames(baseline_pred) <- list(c("U1","U2","U3","U4","U5","U6","U7","U8","U9","U10"),c("M1","M2","M3","M4","M5","M6","M7","M8"))
+
+# Round each baseline predictor value to two decimal places
+baseline_pred <- round(baseline_pred, 2)
+
+baseline_pred
+
+```
+## RSME
+
+```{r, eval=TRUE}
+
+# Calculate the RMSE for the baseline predictors for the test dataset
+pred_test_RSME <- (test - baseline_pred) ^ 2 %>%
+   mean(na.rm = TRUE) %>%
+   sqrt()
+
+pred_test_RSME
+
+# Calculate the RMSE for the baseline predictors for the training dataset
+pred_train_RSME <- (train - baseline_pred) ^ 2 %>%
+   mean(na.rm = TRUE) %>%
+   sqrt()
+
+pred_train_RSME
+
+```
+
+# Summary Results
+
+The results of RSME for baseline predictor show negative improvement for both training and test datasets. The training data is -2.70% and the test data is -20.76%. The percentage improvement is getting worst instead of yielding better prediction. This means that simply using just the raw average did much better job than the baseline predictor.
+
+```{r, eval=TRUE}
+
+# Training dataset percent improvement
+
+pred_improv_train <- scales::percent((1 - (pred_train_RSME/train_RMSE)), accuracy = 0.01)
+
+pred_improv_train
+
+# Test dataset percent improvement
+
+pred_improv_test <- scales::percent((1 - (pred_test_RSME/test_RMSE)), accuracy = 0.01)
+
+pred_improv_test
+
+```
