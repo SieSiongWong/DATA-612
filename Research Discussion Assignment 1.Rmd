@@ -1,0 +1,86 @@
+---
+title: "Research Discussion Assignment 1"
+author: "Sie Siong Wong"
+date: "6/5/2020"
+output:
+  html_document:
+theme: lumen
+---
+
+# Recommender System Techniques {.tabset}
+
+## Overview
+
+IMDb - The ratings and reviews you see on IMDb come from registered users all over the world. Registered users can cast a vote on a 1-10 star scale on every released title in the database. Individual votes are then aggregated and summarized as a single IMDb rating, visible on the title’s main page. The more better the votes are gained, the movie sometimes has a chance to enter the IMDB Top 250 List. Here is the formula used to calculate the Top Rated 250 titles: Weighted Rating (WR) = (v ÷ (v+m)) × R + (m ÷ (v+m)) × C, where 
+
+  * R = average rating for the movie
+  * v = number of votes for the movie
+  * m = minimum votes required to be listed in the Top Rated list
+  * C = the mean vote across the whole report
+
+Rotten Tomatoes - It is mainly a movie review site which is mainly used by critics for posting their views and reviews about any movie. The "Tomatometer", the primary rating vehicle, is a measure of the number of "FRESH" reviews as a percentage of overall reviews. A Tomatometer score is calculated for a movie or TV show after it receives at least five positive reviews. The reviews counted into the Tomatometer is from a discrete list of selected critics registered with the site. If 60% of the critics like the film, the film gets a fresh rating or else it is doomed to rot in the rotten category. To be a critic at Rotten Tomatoes, you need to be a writer at major media organization. The votes of the cinema-goer who have rated the movie or TV Show positively is also taken into account shown in Audience Score denoted by a popcorn bucket but users need to verify they bought the ticket.
+
+Metacritic - It takes reviews from critics, gives them a 0-100 score, and then averages those scores hence gives a better idea of the critical appreciation of the movie. As compared with the Rotten Tomatoes, Metacritic measure the average of all reviews instead of just positive reviews. It gives you an weighted average of ratings and reviews from various top critics and experts. Based on quality and overall stature, more weight will be assigned to some critics and publications than others. Metaschore does not include any votes or comments from users. 
+
+## Why I Prefer IMDb?
+
+I prefer the opinions of us everyday people over critic. IMDb gives a better opinion of the general public because it allows anyone all over the world to vote and write reviews on movies and television shows. Professional critics have no influence on IMDb scores. IMDb gives you ratings from common people who have entirely different tastes. In addition to that, it offers a lot more information on movies and shows. For example, the personal lists on IMDb have way more features than the ones on Rotten Tomatoes.
+
+IMDb ratings are reflections of what actual audience. IMDb ratings are very consistent and fair reflection of a movie whether it is good or bad. I believe in rating derived by the votes cast by millions of users is more reliable than a rating based on the opinion expressed by few hundred people. A larger sample sizes often result in a more representative aggregate rating. I'll say you can’t judge the value of a work of art by what some hundred of people from film critics and those that went to film school say. They are bunch of elitists who represent just a small part of our society. In IMDb, millions of people rates a movie, so there is lesser margins of error. The user rating on Rotten Tomatoes is also decent, but involves lesser users.
+
+Furthermore, Some people would argue about rating manipulation at IMDb but that has been taken care of. From the IMDb website, it mentioned that they have several safeguards in place to automatically detect abuse and minimize attempts to stuff the ballot or otherwise influence the integrity of the voting system. Even though IMDb count and display all unaltered votes in the rating breakdown, they apply several countermeasures to neutralize the impact against all attempts to skew the rating and the weighted rating you see displayed on the site. In other words, just because the ratings breakdown shows a large number of votes doesn't necessarily mean that those votes have the same weight.
+
+Last but not least, collaboration between Metacritic and IMDb also makes IMDb even more attractive to use. I see this is particular good to use as second source to support the rating given to each movie. IMDb title pages also include a Metacritic Score for a title, as well as user reviews and links to professional critic reviews from newspapers, magazines and other publications. They aim to offer a variety of opinions on a title so users can make informed viewing decisions. They also always display the breakdown of the ratings so users can see the distribution of votes and determine how uniform or polarized the opinion of a movie is.
+
+ 
+# How to Handle Attacks on Recommender Systems {.tabset}
+
+## Example
+
+This example was reported by CNBC news where Amazon product’s reviews is distorted with thousands of fake five-star reviews. These false reviews were helping unknown brands dominate searches for popular items. According to the news, it took only few hours to uncover more than 10,000 reviews from unverified purchasers on just 24 items. Also, one pair of headphones being sold by an unknown brand had 439 reviews and these reviews were all five-star, unverified, and posted on the same day.
+
+Even though Amazon use a combination of teams of investigators and automated technology to prevent and detect inauthentic reviews at scale, and to take action against the bad actors behind the abuse, but still there are many fake reviews able to get through both the machine and human investigation per day. It'll be very challenging to detect every fake review because some businesses are trying to pay for positive reviews. Here is an example how it works. Businesses can recruit a group of buyers to buy their products and write a five-star review. Buyers keep the products plus get reimburse the full amount they paid through such as PayPal, QuickPay, etc,. 
+
+Needless to say that online reviews is the single most important factor that most of online shoppers like myself rely on to make a decision which product showing in the search list to buy. Therefore, it is important to design a system that can effectively spot most of fake reviews.   
+
+## Prevention
+
+Amazon uses item-to-item collaborative filtering algorithm on its high traffic web sites' pages. Collaborative recommender systems are highly vulnerable to attack. A large number of biased profile can be injected into the ratings database for the purpose to favor or disfavor a particular item. Below are the two statistical metrics, introduced in the Zhou's paper used to detect rating patterns of attackers and group characteristics in attack profiles, would be a good approach to include when design a recommender system in order to prevent the attack such as the Amazon's case flooded with thousands of fake reviews. The detection model based on target item analysis in Zhou's study shows effectively capture the major characteristics that make an attacker's profile look different from a genuine user's profile.
+
+ * Rating Deviation from Mean Agreement (**RDMA**): identify attackers through examining the profile’s average deviation per item
+
+ * Degree of Similarity with Top Neighbors (**DegSim**): capture the average similarity of a profile's k nearest neighbors.
+
+Apart from the novel technique introduced in the Zhou's paper, combine the three well known classification algorithms (*kNN, C4.5, SVM*) to detect and respond to profile injection attacks was demonstrated in Chad's paper results in improving robustness of the recommender system and significantly reduces the impact of the most powerful attack models previously studied.
+
+Example of some characteristics that I think important to factor in when design a system to identify fake reviews.
+
+ * Duplicate Content: when dozens of reviews all with the same title, phrases, author or something that looks like it was copied and pasted multiple times.
+
+ * Duplicate Reviews Posted Elsewhere: check to see if the same or similar reviews as well.
+
+ * Incorrect Language: compare multiple reviews coming from people who use the incorrect wording or common spelling errors as oftentimes fake reviews can come from people outside of the country. 
+
+ * Reviewers History: go through reviewer history like review and purchase history to check for example, if the reviewer only bought products from a specific seller.
+
+For those who don't trust the product review/rating provided by eCommerce websites such as Amazon, Walmart, etc., you can always use the free tool like Fakespot to filter through the fake reviews to ensure you get the best products from the best sellers.
+
+
+# Reference
+
+IMDb (n.d.). Ratings FAQ. Retrieved from https://help.imdb.com/article/imdb/track-movies-tv/ratings-faq/G67Y87TFYYP6TWAV#ratings.
+
+Rotten Tomatoes (n.d.). About Rotten Tomatoes. Retrieved from https://www.rottentomatoes.com/about.
+
+Metacritic (n.d.). How We Create the Metascore Magic. Retrieved from https://www.metacritic.com/about-metascores.
+
+Taylor, C. (2019, Apr 16). Amazon flooded with thousands of fake reviews, report claims. CNBC. Retrieved from 
+https://www.cnbc.com/2019/04/16/amazon-flooded-with-thousands-of-fake-reviews-report-claims.html.
+
+Zhou et al. (2015, Jul 29). Shilling Attacks Detection in Recommender Systems Based on Target Item Analysis. PubMed. Retrieved from 
+https://pubmed.ncbi.nlm.nih.gov/26222882/.
+
+Linden, G., Smith, B., & York, J. (2003, Jan 23). Amazon.com recommendations: item-to-item collaborative filtering. IEEE. Retrieved from https://ieeexplore.ieee.org/document/1167344/metrics.
+
+Williams, C.A., Mobasher, B. & Burke, R. (2007, Aug 21). Defending recommender systems: detection of profile injection attacks. ResearchGate. Retrieved from https://www.researchgate.net/publication/220621575_Defending_recommender_systems_Detection_of_profile_injection_attacks.
+
