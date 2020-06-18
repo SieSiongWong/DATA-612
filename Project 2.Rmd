@@ -1,0 +1,520 @@
+---
+title: "Project 2"
+author: "Sie Siong Wong"
+date: "6/12/2020"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+theme: lumen
+---
+
+# Introduction
+
+The goal of this project is to implement and configure a recommender using below two types of recommendation algorithms, and then to evaluate and compare different approaches, different algorithms, and similarity methods. 
+
+  * User-User Collaborative Filtering
+  * Item-Item Collaborative Filtering
+
+# Load R Packages
+
+```{r, eval=TRUE, warning=FALSE, message=FALSE}
+
+# Load required packages
+library(tidyverse)
+library(recommenderlab)
+library(psych)
+library(reshape2)
+library(ggpubr)
+library(purrr)
+
+```
+
+
+# Load Data
+
+Both the movies and ratings datasets are taken from https://grouplens.org/datasets/movielens/latest/. There are two versions of these datasets. The small datasets are chosen due to limited computing power available on my laptop. 
+
+```{r, eval=TRUE}
+
+# Load movies and ratings datasets
+movies <- read.csv("https://raw.githubusercontent.com/SieSiongWong/DATA-612/master/movies.csv")
+
+ratings <- read.csv("https://raw.githubusercontent.com/SieSiongWong/DATA-612/master/ratings.csv")
+
+head(movies)
+head(ratings)
+
+```
+
+
+# Data Exploration & Preprocessing
+
+## Statistic Summary
+
+The movies dataset contain 3 columns and 9742 observations. The ratings dataset contain 4 columns and 100,836 observations.
+
+We can see that the mean of the rating variable is at 3.5 and the standard deviation is 1.04 and the distribution is left skewed a little.
+
+```{r, eval=TRUE}
+
+# Summary of movies and ratings datasets
+str(movies)
+str(ratings)
+
+# Statistical summary of rating variable
+describe(ratings$rating)
+
+# Plot a histogram to show the distribution of ratings
+hist(ratings$rating, main = "Ratings Distribution", xlab = "Ratings", ylab = "Frequency", col = "hotpink", ylim = c(0,30000), breaks = 15)
+
+```
+
+## Matrix Conversion
+
+First of all, we have to convert the raw dataset into matrix format that can be used for building recommendation systems through the recommenderlab package.
+
+```{r, eval=TRUE}
+
+# Convert to rating matrix
+ratings_matrix <- dcast(ratings, userId~movieId, value.var = "rating", na.rm = FALSE)
+  
+# remove userid column
+ratings_matrix <- as.matrix(ratings_matrix[,-1])
+  
+# Convert rating matrix into a recommenderlab sparse matrix
+ratings_matrix <- as(ratings_matrix, "realRatingMatrix")
+
+ratings_matrix
+
+```
+
+Each row of the ratings_matrix corresponds to a user, and each column corresponds to a movie id. There are more than 610 x 9724 = 5,931,640 combinations between a user and a movie id. So, it requires 5,931,640 cells to build the matrix. As we know that not every user has watched every movie. There are only 100,836 observations, so this matrix is sparse.
+
+## Exploring the Values of the Rating
+
+```{r, eval=TRUE}
+
+# Convert the ratings matrix into a vector
+vec_ratings <- as.vector(ratings_matrix@data)
+
+# Unique ratings
+unique(vec_ratings)
+
+# Count the occurrences for each rating
+table_ratings <- table(vec_ratings)
+
+table_ratings
+
+```
+
+As we know a rating equal to 0 means a missing value in the matrix, so we can remove all of them before building a frequency plot of the ratings to visualize the ratings distribution.
+
+```{r, eval=TRUE}
+
+# Remove zero rating and convert the vector to factor
+vec_ratings <- vec_ratings[vec_ratings != 0] %>% factor()
+
+# Visualize through qplot
+qplot(vec_ratings, fill = I("steelblue")) + 
+  ggtitle("Distribution of the Ratings") + 
+  labs(x = "Ratings")
+
+```
+
+## Explore Most Viewed Movies
+
+```{r, eval=TRUE}
+
+# Search for the top 5 most viewed movies
+most_views <- colCounts(ratings_matrix) %>% melt()
+
+most_views <- tibble::rowid_to_column(most_views, "movieId") %>% 
+  rename(count = value) %>% 
+  top_n(count, n = 5) %>% 
+  merge(movies, by = "movieId")
+
+# Visualize the top 5 most viewed movies
+ggplot(most_views, aes(x = reorder(title, count), y = count, fill = 'lightblue')) + 
+  geom_bar(stat = "identity") + 
+  theme(axis.text.x =element_text(angle = 45, hjust = 1)) + 
+  ggtitle("Top 5 Most Viewed Movies") + 
+  theme(legend.position = "none", axis.title.x = element_blank())
+
+```
+
+## Explore the Average Ratings
+
+```{r, eval=TRUE, message=FALSE}
+
+# Average rating for each movie
+avg_ratings_mv <- colMeans(ratings_matrix)
+
+# Average rating for each user
+avg_ratings_us <- rowMeans(ratings_matrix)
+
+# Visualize the distribution of the average movie rating
+avg1 <- qplot(avg_ratings_mv) + 
+  stat_bin(binwidth = 0.1) +
+  ggtitle("Average Movie Rating Distribution") + 
+  labs(x = 'Average Rating', y = 'Frequency') 
+
+# Visualize the distribution of the average rating per user
+avg2 <- qplot(avg_ratings_us) + 
+  stat_bin(binwidth = 0.1) +
+  ggtitle("Average Rating Per User Distribution") + 
+  labs(x = 'Average Rating', y = 'Frequency') 
+
+figure <- ggarrange(avg1, avg2, ncol = 1, nrow = 2)
+
+figure
+
+```
+
+From both of the plots above, we can see that there are some movies have only few ratings and some users only rated few movies. For building recommendation system, we don't want take these movies and users into account as these ratings might be biased. To remove these least-watched movies and least-rated users, we can set a threshold of minimum number for example, 50.
+
+```{r, eval=TRUE, message=FALSE}
+
+# Filter users and movies more than 50 
+ratings_matrix <- ratings_matrix[rowCounts(ratings_matrix) > 50, colCounts(ratings_matrix) > 50]
+
+# Average rating for each movie
+avg_ratings_mv2 <- colMeans(ratings_matrix)
+
+# Average rating for each user
+avg_ratings_us2 <- rowMeans(ratings_matrix)
+
+# Visualize the distribution of the average movie rating
+avg3 <- qplot(avg_ratings_mv2) + 
+  stat_bin(binwidth = 0.1) +
+  ggtitle("Average Movie Rating Distribution") + 
+  labs(x = 'Average Rating', y = 'Frequency')
+
+# Visualize the distribution of the average rating per user
+avg4 <- qplot(avg_ratings_us2) + 
+  stat_bin(binwidth = 0.1) +
+  ggtitle("Average Rating Per User Distribution") + 
+  labs(x = 'Average Rating', y = 'Frequency')
+
+figure2 <- ggarrange(avg1, avg2, avg3, avg4, 
+                     labels = c("A", "B", "C", "D"), 
+                     ncol = 2, nrow = 2)
+
+figure2
+
+```
+
+The effect of removing those potential biased ratings to the distribution is obvious. From above figure, we can see that the curve is much narrow and has less variance compared to before. 
+
+
+# Recommenderlab
+
+Let's see what are some of the recommender options are available from the recommenderlab package applicable to the realRatingMatrix objects for building recommendation systems.
+
+```{r, eval=TRUE}
+
+# Display the list of options for real rating matrix 
+rec <-  recommenderRegistry$get_entries(dataType = "realRatingMatrix")
+names(rec)
+
+# Description for the IBCF method
+lapply(rec, `[[`, 'description') %>%  `[[`('IBCF_realRatingMatrix')
+
+# Description for the UBCF method
+lapply(rec, `[[`, 'description') %>%  `[[`('UBCF_realRatingMatrix')
+
+# Default parameter values for the IBCF method
+rec$IBCF_realRatingMatrix$parameters
+
+# Default parameter values for the UBCF method
+rec$UBCF_realRatingMatrix$parameters
+
+```
+
+"IBCF_realRatingMatrix" and "UBCF_realRatingMatrix" are the two models used to demonstrate in this project. One is item-based and the other is user-based collaborative filtering. Different parameters will be used to optimize the performance of these two recommendation models.
+
+
+# Collaborative Filtering System
+
+Since both of the user-based and item-based CF algorithms automatically normalize the data, we can directly use the ratings matrix data from last step above without having to normalize the data manually.
+
+## Split Dataset
+
+We will build this filtering system by splitting the dataset into 80% training set and 20% test set. 10 ratings per user will be given to the recommender to make predictions and the other ratings are held out for computing prediction accuracy.
+
+```{r, eval=TRUE}
+
+evaluation <- evaluationScheme(ratings_matrix, method = "split", train = 0.8, given = 10)
+
+evaluation
+
+train <- getData(evaluation, "train")
+train
+
+test_known <- getData(evaluation, "known")
+test_known
+
+test_unknown <- getData(evaluation, "unknown")
+test_unknown
+
+```
+
+## Item-Based
+
+Create an IBCF recommender, using "Pearson" similarity measure and 50 most similar items.
+
+```{r, eval=TRUE}
+
+# Create an item-based CF recommender using training data
+rec_ib <- Recommender(data = train, method = "IBCF",
+                        parameter = list(method = "pearson", k = 50))
+
+# Create predictions for the test items using known ratings with type as ratings
+pred_ib_acr <- predict(object = rec_ib, newdata = test_known, type = "ratings")
+
+# Create predictions for the test items using known ratings with type as top n recommendation list
+pred_ib_n <- predict(object = rec_ib, newdata = test_known, n = 5)
+
+```
+
+### Exploring the Recommender Model on the Test Set
+
+Top 5 recommendations for the first 5 users.
+
+```{r, eval=TRUE, message=FALSE}
+
+# Recommendations for the first 5 users.
+first_5_users <- pred_ib_n@items[1:5] %>% data.frame()
+colnames(first_5_users) <- c("user1", "user2", "user3", "user4", "user5")
+first_5_users <- first_5_users %>% melt() %>% 
+  rename(movieId = value) %>% 
+  merge(movies, by = "movieId") %>% 
+  rename(users = variable) %>% 
+  select(users:title)
+first_5_users <- first_5_users[order(first_5_users$users),]
+
+first_5_users
+
+```
+
+Number of times each movie got recommended
+
+```{r, eval=TRUE, message=FALSE}
+
+# Define a matrix with the recommendations to the test set users
+rec_matrix <- sapply(pred_ib_n@items, function(x){
+  colnames(ratings_matrix)[x]
+})
+
+# Define a vector with all recommendations
+num_of_items <- factor(table(rec_matrix))
+
+# Visualize the distribution of the number of items
+qplot(num_of_items) + ggtitle("Distribution of the Number of Items")
+
+```
+
+Top 5 most recommended movies
+
+```{r, eval=TRUE, message=FALSE}
+
+# Top 5 most recommended movies
+top5_rec_mv <- num_of_items %>% data.frame()
+top5_rec_mv <- cbind(movieId = rownames(top5_rec_mv), top5_rec_mv)
+rownames(top5_rec_mv) <- 1:nrow(top5_rec_mv)
+colnames(top5_rec_mv)[2] <- "count"
+top5_rec_mv <- top5_rec_mv %>% 
+  mutate_if( is.factor, ~ as.integer(levels(.x))[.x]) %>%
+  top_n(count, n = 5) %>% 
+  merge(movies, by = "movieId")
+
+top5_rec_mv <- top5_rec_mv[order(top5_rec_mv$count, decreasing = TRUE),] %>% 
+  select(title)
+
+top5_rec_mv
+
+```
+
+## User-Based
+
+Create an UBCF recommender, using "Pearson" similarity measure and 50 nearest neighbors.
+
+```{r, eval=TRUE, message=FALSE}
+
+# Create an user-based CF recommender using training data
+rec_ub <- Recommender(data = train, method = "UBCF", 
+                      parameter = list(method = "pearson", nn = 50))
+
+# Create predictions for the test users using known ratings with type as ratings
+pred_ub_acr <- predict(rec_ub, test_known, type = "ratings")
+
+# Create predictions for the test users using known ratings with type as top n recommendation list
+pred_ub_n <- predict(object = rec_ub, newdata = test_known, n = 5)
+
+```
+
+### Exploring the Recommender Model on the Test Set
+
+Top 5 recommendations for the first 5 users.
+
+```{r, eval=TRUE, message=FALSE}
+
+# Recommendations for the first 5 users
+first_5_users <- pred_ub_n@items[1:5] %>% data.frame()
+colnames(first_5_users) <- c("user1", "user2", "user3", "user4", "user5")
+first_5_users <- first_5_users %>% melt() %>% 
+  rename(movieId = value) %>% 
+  merge(movies, by = "movieId") %>% 
+  rename(users = variable) %>% 
+  select(users:title)
+first_5_users <- first_5_users[order(first_5_users$users),]
+
+first_5_users
+
+```
+
+Visualize the distribution of the number of items
+
+```{r, eval=TRUE, message=FALSE}
+
+# Define a matrix with the recommendations to the test set users
+rec_matrix <- sapply(pred_ub_n@items, function(x){
+  colnames(ratings_matrix)[x]
+})
+
+# Define a vector with all recommendations
+num_of_items <- factor(table(rec_matrix))
+
+# Visualize the distribution of the number of items
+qplot(num_of_items) + ggtitle("Distribution of the Number of Items")
+
+```
+
+Top 5 most recommended movies
+
+```{r, eval=TRUE, message=FALSE}
+
+# Top 5 most recommended movies
+top5_rec_mv <- num_of_items %>% data.frame(stringsAsFactors = FALSE)
+top5_rec_mv <- cbind(movieId = rownames(top5_rec_mv), top5_rec_mv)
+rownames(top5_rec_mv) <- 1:nrow(top5_rec_mv)
+colnames(top5_rec_mv)[2] <- "count"
+top5_rec_mv <- top5_rec_mv %>% 
+  mutate_if( is.factor, ~ as.integer(levels(.x))[.x]) %>%
+  top_n(count, n = 5) %>% 
+  merge(movies, by = "movieId")
+
+top5_rec_mv <- top5_rec_mv[order(top5_rec_mv$count, decreasing = TRUE),] %>% 
+  select(title)
+
+top5_rec_mv
+
+```
+
+
+## Evaluation
+
+Compare predictions with true "unknown" ratings
+
+```{r, eval=TRUE}
+
+# Compare predictions with true "unknown" ratings
+as(test_unknown, "matrix")[1:8,1:5]
+as(pred_ib_acr, "matrix")[1:8,1:5]
+as(pred_ub_acr, "matrix")[1:8,1:5]
+
+```
+
+Evaluate the accuracy of User-Based CF and Item-Based CF recommender on unknown ratings.
+
+```{r, eval=TRUE}
+
+# Evaluate Item-Based recommendations on unknown ratings
+acr_ib <- calcPredictionAccuracy(pred_ib_acr, test_unknown)
+
+# Evaluate User-Based recommendations on unknown ratings
+acr_ub <- calcPredictionAccuracy(pred_ub_acr, test_unknown)
+
+acr <- rbind(IBCF = acr_ib, UBCF = acr_ub)
+
+acr
+
+```
+Let's try another evaluation scheme with "Cross Validation" method and "Cosine" similarity measure.
+
+```{r, eval=TRUE}
+
+# Setup the evaluation scheme
+evaluation_2 <- evaluationScheme(ratings_matrix, 
+                                 method     = "cross", 
+                                 k          = 5, 
+                                 train      = 0.8, 
+                                 given      = 10,
+                                 goodRating = 5
+                                 )
+
+evaluation_2
+
+# Set up list of algorithms
+algorithms <- list(
+  "item-based CF"     = list(name  = "IBCF", parameter = list(method = "Cosine", k = 50)),
+  "user-based CF"     = list(name  = "UBCF", parameter = list(method = "Cosine", nn = 50))
+                  )
+
+# Estimate the models
+results <- evaluate(evaluation_2, 
+                    algorithms, 
+                    type  = "topNList", 
+                    n     = c(1, 3, 5, 10, 15, 20)
+                   )
+
+results
+
+# Create a function to get average of precision, recall, TPR, FPR
+avg_cf_matrix <- function(results) {
+avg <- results %>%
+  getConfusionMatrix()  %>%  
+  as.list()
+  as.data.frame( Reduce("+", avg) / length(avg)) %>% 
+  mutate(n = c(1, 3, 5, 10, 15, 20)) %>%  
+  select('n', 'precision', 'recall', 'TPR', 'FPR')
+}
+
+# Using map() to iterate the avg function across both models
+results_tbl <- results %>% map(avg_cf_matrix) %>% enframe() %>% unnest()
+
+results_tbl
+
+# Plot ROC curves for each model
+results_tbl %>%
+  ggplot(aes(FPR, TPR, color = fct_reorder2(as.factor(name), FPR, TPR))) +
+  geom_line() +
+  geom_label(aes(label = n))  +
+  labs(title = "ROC Curves", color = "Model") +
+  theme_grey(base_size = 14)
+
+# Plot Precision-Recall curves for each model
+results_tbl %>%
+  ggplot(aes(recall, precision, color = fct_reorder2(as.factor(name), recall, precision))) +
+  geom_line() +
+  geom_label(aes(label = n))  +
+  labs(title = "Precision-Recall Curves", colour = "Model") +
+  theme_grey(base_size = 14)
+
+```
+
+
+# Summary
+
+From the evaluation results, user-based CF model is the clear winner in either methods. We can see its RMSE is lower than item-based CF model. Also, we can see clearly from ROC curves that the user-based CF model achieves higher TPR for any given level of FPR. This means that the user-based CF model is producing higher number of relevant recommendations (true positives) for the same level of non-relevant recommendations (false positives). This happens the same in Precision-Recall curves where user-based CF model has higher Recall for any given level of Precision. This means that it minimizes False Negatives for all level of False Positives. Furthermore, each method has a number of tuning parameters such as type of similarity, number of neighbors, number of latent factors, regularization parameters and so on. We can do further comparison by playing around with these parameters. 
+
+Even though collaborative filtering is the most popular branch of recommendation but it does have some limitations when dealing with new users or items. If the new user hasn't seen any movie yet, neither of the two models is able to recommend any item. It's the same thing if the new item hasn't been purchased by anyone, it will never be recommended. To handle this cold start problem, as recommended from "Building a Recommendation System with R" book we should take account of other information such as user profiles and item descriptions into building our recommendation systems. This will lead to building a hybrid recommender system, combination of item-based and/or used-based with content-based filtering models, which usually give better results.
+
+
+# Reference
+
+Gorakala, K.G. & Usuelli, M. (2015, Sept). Building a Recommendation System with R (pp. 50-92). Packt Publishing Ltd.
+
+Hashler, M. & Vereet, B. (2019, Aug 27). Package ‘recommenderlab’. CRAN. Retrieved from https://cran.r-project.org/web/packages/recommenderlab/recommenderlab.pdf.
+
