@@ -1,0 +1,42 @@
+---
+title: "Research Discussion Assignment 2"
+author: "Sie Siong Wong"
+date: "6/18/2020"
+output:
+  html_document:
+theme: lumen
+---
+
+# Summary
+
+There are few interesting points that caught my attention wanted to replay the talk few times: Explicit vs implicit matrix factorization, implicit matrix factorization with Hadoop, Hadoop vs Spark, and  different way of coding attempts to improve running time performance.
+
+First of all, a common task of recommender systems is to improve customer experience through personalized recommendations based on their prior feedback. It's interesting to see the given example showing the difference between explicit and implicit matrix factorization as before I have no idea about the term explicit and implicit in matrix factorization. I think it's important to know the difference so that you can decide which type of customer feedback you're going to use in building your recommender systems and then identify unique properties of the feedback datasets. Implicit recommender systems passively track different sorts of user behavior, such as purchase history, watching habits and browsing activity, in order to model user preferences. For instance, the binary matrix used in Spotify where 1 means streamed the music at least one time and 0 means never streamed the music. Unlike the explicit feedback, it requires direct input from the users regarding their preferences. For example, users require to rate a movie from scale 1-5 after they watch.
+
+Another interesting point I found is the implicit matrix factorization with Hadoop at map step where the binary rating matrix is grouped into blocks and each block will only contain subset of users and items which have same type of combination. For example, user = 0 and item = 0 will be grouped in the same block. This approach helps to reduce the computation for example, just compute the eigenvectors associated with the block we need instead of every eigenvector. High performance computer can easily be degraded by excessive transfer of data between different levels of memory. It is often preferable to partition the matrix or matrices into blocks and to perform the computation by matrix-matrix operations on the blocks. This approach avoids excessive movement of data to and from memory, gives a surface-to-volume effect for the ratio of arithmetic operations to data movement, and well suited to the implementation of an underlying iterative process used to compute the eigenvalues or singular values (Dongarra).
+
+I also think that the I/O bottleneck where Hadoop suffers from I/O overhead can be resolved through Spark is another interesting point from this talk. As we know that RAM is always faster. It has its own, dedicated, direct line of communication with the processor, whereas other forms of storage have to share communication pathways (buses) with other devices. So, Spark is definitely faster when compared to Hadoop because it processes everything in memory. Through using Spark, we can load matrices into memory, cache it, and then join them where they were cached. This way we don't have to keep rereading from disk for every iteration. Neither of Spark or Hadoop can replace one another. For example, Hadoop has features like a distributed file system that Spark does not have while Spark presents real-time, in-memory processing for the required data sets. But, both Hadoop and Spark form the perfect combination for business applications especially in big data scenario. Where Hadoop has been a revelation in the big data market for businesses requiring huge datasets to be brought under control by commodity systems, Spark’s speed and comparative ease of use compliments the low-cost operation involving Hadoop. Figure below taken from KnowledgeHut website shows both Spark and Hadoop are compatible with each other.
+
+```{r, eval=FALSE, echo=FALSE}
+
+knitr::include_graphics('C:\\Users\\Gang Zhang\\Desktop\\CUNY SPS\\Courses\\Summer 2020\\DATA 612 - Recommender Systems\\Assignments\\2\\Spark and Hadoop Compatibility.png')
+
+```
+
+Last but not least, different way of coding attempts in Spark to improve efficiency to solve optimal users eigenvectors is interesting as well. It shows the pros and cons of each approach. The first approach which major drawbacks are unnecessarily shuffling data across wire each iteration, grouping but not caching data, and unnecessarily sending full copy of user/item to all nodes. The second approach (full gridify) resolved most of the problems faced by first attempt plus each partition only requires a subset of item/user vectors in memory for each iteration. However, it requires sending lots of information data over wire each iteration in order to aggregate and solve for optimal user vectors. Shuffling data between nodes is the slowest operation in the computer as it uses network resources rather than RAM and registers. That's where the third approach (half gridify) can improve the performance without any additional shuffling or aggregation to solve optimal user vectors. That's why the half gridify is the fastest running time compared to full gridify approach and Hadoop based on ALS algorithm as shown in below figure.
+
+```{r, eval=FALSE, echo=FALSE}
+
+knitr::include_graphics('C:\\Users\\Gang Zhang\\Desktop\\CUNY SPS\\Courses\\Summer 2020\\DATA 612 - Recommender Systems\\Assignments\\2\\ALS Running Times.png')
+
+```
+
+# Reference
+
+Dongarra, J.J., Sorensen, C.D., & Hamamarling, J.S. (1988, Feb 11). Block reduction of matrices to condensed forms for eigenvalue computations. ScienceDirect. Retrieved from https://www.sciencedirect.com/science/article/pii/0377042789903671.
+
+KnowledgeHut. (2019, Jul 10). Apache Spark Vs Hadoop - Head to Head Comparison. Retrieved from https://www.knowledgehut.com/blog/big-data/apache-spark-vs-hadoop.
+
+
+
+
