@@ -1,0 +1,58 @@
+---
+title: "Research Discussion Assignment 3"
+author: "Sie Siong Wong"
+date: "6/24/2020"
+output:
+  html_document:
+theme: lumen
+---
+
+# Introduction {.tabset}
+
+In the past, humans and organizations made decisions in hiring, advertising, criminal sentencing, and lending. These decisions were often governed by federal, state, and local laws that regulated the decision-making processes in terms of fairness, transparency, and equity. Today, some of these decisions are entirely made or influenced by machines whose scale and statistical rigor promise unprecedented efficiencies. However, machines can treat similarly-situated people and objects differently and run the risk of replicating and even amplifying human biases. If left unchecked, biased algorithms can lead to decisions which can have a collective, disparate impact on certain groups of people even without the programmer’s intention to discriminate.
+
+
+# Ways of Recommender Systems Reinforce Human Bias {.tabset}
+
+There are two ways I think recommender systems reinforce human bias. One is historical human biases and another is incomplete or unrepresentative training data.
+
+## **Historical Human Biases**
+
+Historical human biases are shaped by pervasive and often deeply embedded prejudices against certain groups, which can lead to their reproduction and amplification in computer models. For example, the ProPublica released an investigation showing the bias of COMPAS algorithm against black defendants. The COMPAS (Correctional Offender Management Profiling for Alternative Sanctions) algorithm, which is used by judges to predict whether defendants should be detained or released on bail pending trial. The algorithm could single out those who would go on to reoffend with roughly the same accuracy for each race. But it guessed wrong about twice as often for black people (*Chodosh*). In the algorithm, if African-Americans are more likely to be arrested and incarcerated in the U.S. due to historical racism, disparities in policing practices, or other inequalities within the criminal justice system, these realities will be reflected in the training data and used to make suggestions about whether a defendant should be detained (*Lee, Resnick, Barton*). If historical biases are factored into the model, it will make the same kinds of wrong judgments that people do.
+
+Another example is the Amazon recruiting engine, which was used to review job applicants’ resumes with the aim of mechanizing the search for top talent, did not like women. Models were trained to vet applicants by observing patterns in resumes submitted to the company over a 10-year period. Most came from men, a reflection of male dominance across the tech industry. In effect, Amazon’s system taught itself that male candidates were preferable (*Dastin*). When men were the benchmark for professional fit, resulting in female applicants and their attributes being downgraded. In late 2018, Amazon discontinued use of this recruiting algorithm after discovering the gender bias. These historical realities often find their way into the algorithm’s development and execution, and they are exacerbated by the lack of diversity which exists within the computer and data science fields.
+
+Furthermore, human biases can be reinforced and perpetuated without the user’s knowledge. For example, a minority group who are primarily the target for high-interest credit card options might find themselves clicking on this type of ad without realizing that they will continue to receive such predatory online suggestions. The algorithm may never recommend counterfactual ad for example, lower-interest credit options, that this minority group could be eligible for and prefer. Thus, it is important for algorithm designers and operators to watch for such potential negative feedback loops that cause an algorithm to become increasingly biased over time. (*Lee, Resnick, Barton*)
+
+## **Incomplete or Unrepresentative Training Data**
+
+Insufficient training data could be another way that makes recommender systems reinforce human bias. If the data used to train the algorithm are more representative of some groups of people than others, then predictions from the model may also be inaccurate or underrepresented the whole population. For example, in Buolamwini’s facial-analysis experiments, the poor recognition of darker-skinned faces was largely due to their statistical underrepresented in the training data (*Hardesty*). That is, the algorithm presumably picked up on certain facial features, such as the distance between the eyes, the shape of the eyebrows and variations in facial skin shades, as ways to detect male and female faces. However, the facial features that were more representative in the training data were not as diverse and, therefore, less reliable to distinguish between complexions, even leading to a misidentification of darker-skinned females as males. 
+
+Conversely, algorithms with too much data (over-representation) can skew the decision toward a particular result. According to a recent report from Georgetown University's law school, nearly half of all American adults (~117 million adults' photos) are in facial recognition networks used by law enforcement, and that African-Americans were more likely to be singled out primarily because of their over-representation in mug-shot databases (*Sydell*). Consequently, this could lead to African-American faces had more opportunities to be falsely matched, which produced a biased effect.
+
+
+# Reinforcement or Prevention of Unethical Targeting or Customer Segmentation {.tabset}
+
+I don't think it can be absolutely in either way, reinforcement or prevention. I would say it depends on all stakeholders who have a control over the algorithms creation from concept to production. A framework of algorithmic hygiene is necessary to identify causes of biases and employs best practices to mitigate them.
+
+Developing a bias impact statement such as a template of questions that can be used to guide all stakeholders through design, implementation, and monitoring phases. This way can help probe and avert any potential biases. As a best practice, operators of algorithms should brainstorm a core set of initial assumptions about the algorithm’s purpose prior to its development and execution. Operators should apply the bias impact statement to assess the algorithm’s purpose, process and production, where appropriate. It is also important to establish a cross-functional and interdisciplinary team to create and implement the bias impact statement. (*Lee, Resnick, Barton*)
+
+For example, New York University’s AI Now Institute has already introduced a model framework for governmental entities to use to create algorithmic impact assessments (AIAs), which evaluate the potential detrimental effects of an algorithm in the same manner as environmental, privacy, data, or human rights impact statements. While there may be differences in implementation given the type of predictive model, the AIA encompasses multiple rounds of review from internal, external, and public audiences. (*Reisman et al*)
+
+If there is not a process in place that incorporates technical diligence, fairness, and equity from design to execution, then all stakeholders should be concerning. That is, when algorithms are responsibly designed, they may avoid the unfortunate consequences of amplified unethical applications.
+
+
+# Reference {.tabset}
+
+Chodosh, S. (2018, Jan 18). Courts use algorithms to help determine sentencing, but random people get the same results. Popular Science. Retrieved from https://www.popsci.com/recidivism-algorithm-random-bias/.
+
+Lee, N.T., Resnick, P., & Barton, G. (2019, May 22). Algorithmic bias detection and mitigation: Best practices and policies to reduce consumer harms. Brookings. Retrieved from https://www.brookings.edu/research/algorithmic-bias-detection-and-mitigation-best-practices-and-policies-to-reduce-consumer-harms/#footnote-6.
+
+Dastin, J. (2018, Oct 9). Amazon scraps secret AI recruiting tool that showed bias against women. Reuters. Retrieved from https://www.reuters.com/article/us-amazon-com-jobs-automation-insight/amazon-scraps-secret-ai-recruiting-tool-that-showed-bias-against-women-idUSKCN1MK08G.
+
+Hardesty, L. (2018, Feb 11). Study finds gender and skin-type bias in commercial artificial-intelligence systems. MIT News. Retrieved from http://news.mit.edu/2018/study-finds-gender-skin-type-bias-artificial-intelligence-systems-0212.
+
+Sydell, L. (2016, Oct 25). It Ain't Me, Babe: Researchers Find Flaws In Police Facial Recognition Technology. NPR. Retrieved from https://www.npr.org/sections/alltechconsidered/2016/10/25/499176469/it-aint-me-babe-researchers-find-flaws-in-police-facial-recognition.
+
+Reisman et al. (2018, April). ALGORITHMIC IMPACT ASSESSMENTS: A PRACTICAL FRAMEWORK FOR PUBLIC AGENCY ACCOUNTABILITY. New York: AI Now. Retrieved from  https://ainowinstitute.org/aiareport2018.pdf.
+
