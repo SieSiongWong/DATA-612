@@ -1,0 +1,56 @@
+---
+title: "Research Discussion Assignment 4"
+author: 'Sie Siong Wong'
+date: "7/1/2020"
+output:
+  html_document:
+theme: lumen
+---
+
+# Introduction {.tabset}
+
+Machine learning systems are already being used to make life-changing decisions for example, which job applicants are hired, which mortgage applicants are given a loan, which prisoners are released on parole, and so on. Such decisions affect human rights, often of the most vulnerable people in society. Designed and used well, machine learning systems can help to eliminate the kind of human bias in decision-making that society has been working hard to stamp out. However, it is also possible for machine learning systems to reinforce systemic bias and discrimination and prevent dignity assurance. For example, historical data on employment may show women getting promoted less than men. If a machine learning system trained on such data concludes that women are worse hires, it will perpetuate discrimination. Discriminatory outcomes not only violate human rights, they
+also undermine public trust in machine learning. If public opinion becomes negative, it is likely to lead to reactive regulations that thwart the development of machine learning and its positive social and economic potential (*World Economic Forum*). There are technical and non-technical ways to mitigate the risks of algorithmic discrimination.
+
+
+# Ways to Prevent Algorithmic Discrimination {.tabset}
+
+## **Non-Technical**
+
+Implicit or unconscious discrimination can be backed into algorithms, developing a bias impact statement such as a template of questions that can be used to guide all stakeholders through design, implementation, and monitoring phases can help probe and avert any potential discrimination. As a best practice, operators of algorithms should brainstorm a core set of initial assumptions about the algorithm’s purpose prior to its development and execution. Operators should apply the bias impact statement to assess the algorithm’s purpose, process and production, where appropriate. It is also important to establish a cross-functional and interdisciplinary team to create and implement the bias impact statement. (*Lee, Resnick, Barton*)
+
+Also, employing diversity in the design of algorithms upfront will trigger and potentially avoid harmful discriminatory effects on certain protected groups, especially racial and ethnic minorities. While the immediate consequences of biases in these areas may be small, the sheer quantity of digital interactions and inferences can amount to a new form of systemic bias. Therefore, the operators of algorithms should not discount the possibility or prevalence of bias and should seek to have a diverse workforce developing the algorithm, integrate inclusive spaces within their products, or employ “diversity-in-design,” where deliberate and transparent actions will be taken to ensure that cultural biases and stereotypes are addressed upfront and appropriately. (*Lee, Resnick, Barton*)
+
+The formal and regular auditing of algorithms to check for bias is another best practice for detecting and mitigating algorithmic discrimination. Audits prompt the review of both input data and output decisions, and when done by a third-party evaluator, they can provide insight into the algorithm’s behavior. While some audits may require technical expertise, but this may not always be the case. Facial recognition software that misidentifies persons of color more than whites is an instance where a stakeholder or user can spot biased outcomes, without knowing anything about how the algorithm makes decisions. Developing a regular and thorough audit of the data collected for the algorithmic operation, along with responses from developers, civil society, and others impacted by the algorithm, will better detect and possibly deter discrimination. (*Lee, Resnick, Barton*)
+
+## **Technical**
+
+Bias may be a human problem, but amplification of bias is a technical problem where a mathematically explainable and controllable byproduct of the way models are trained. There are some techniques can be used to ensure that the models we build are not reflecting and magnifying human biases in data. (*Xu*)
+
+  * Adversarial de-biasing of models through protection of sensitive attributes:
+  
+    In this technique you’re building two models. The first is predicting your target, based upon      whatever feature engineering and pre-processing steps you’ve taken on your training data           already. The second model is the adversary, and it tries to predict, based upon the                predictions of your first model, the sensitive attribute. Ideally, in a situation without bias,     this adversarial model should not be able to predict well the sensitive attribute. The             adversarial model, therefore, guides modifications of the original model (via parameters and       weighting) that weakens the predictive power of the adversarial model until it cannot predict      the protected attributes well based upon the outcomes. (*Mahmoudian*)
+    
+  * Encoding invariant representations with semi-supervised, variational “fair” autoencoders:
+  
+    It is an autoencoder whose encodings distribution is regularized during the training in order      to ensure that its latent space has good properties allowing us to generate some new data. The     term “variational” comes from the close relation between the regularization and the variational     inference method in statistics. Further explanation can be found in "Rocca" article. 
+    
+  * Dynamic upsampling of training data based on learned latent representations:
+  
+    This approach let the model learn which inputs come from under-represented groups and sample       those inputs more frequently during training. It does not require you to know or specify the       sensitive attributes in your data. The model will learn them automatically as it trains. As a      result, the model will also be free to learn more complex and nuanced sources of                   “under-representation” than a human annotator could easily specify. In facial recognition, for     example, it may be easy for humans to identify which segments of the population are                under-represented in training data, but it is a lot harder to specify which poses or facial        expressions are featured too infrequently to predict with good accuracy.
+
+
+# Reference {.tabset}
+
+Lee, N.T., Resnick, P., & Barton, G. (2019, May 22). Algorithmic bias detection and mitigation: Best practices and policies to reduce consumer harms. Brookings. Retrieved from https://www.brookings.edu/research/algorithmic-bias-detection-and-mitigation-best-practices-and-policies-to-reduce-consumer-harms/#footnote-6.
+
+Council of Europe. (2018). Discrimination, artificial intelligence, and algorithmic decision-making. Retrieved from https://rm.coe.int/discrimination-artificial-intelligence-and-algorithmic-decision-making/1680925d73.
+
+World Economic Forum. (2018, March). How to Prevent Discriminatory Outcomes in Machine Learning. Retrieved from http://www3.weforum.org/docs/WEF_40065_White_Paper_How_to_Prevent_Discriminatory_Outcomes_in_Machine_Learning.pdf.
+
+Xu, J. (2019, Jun 18). Algorithmic Solutions to Algorithmic Bias: A Technical Guide. Medium. Retrieved from https://towardsdatascience.com/algorithmic-solutions-to-algorithmic-bias-aef59eaf6565
+
+Mahmoudian, H. (2019, Apr 21). Using Adversarial Debiasing to Reduce Model Bias. Medium. Retrieved from https://towardsdatascience.com/reducing-bias-from-models-built-on-the-adult-dataset-using-adversarial-debiasing-330f2ef3a3b4.
+
+Rocca, J. (2019, Sep 23). Understanding Variational Autoencoders (VAEs). Medium. Retrieved from https://towardsdatascience.com/understanding-variational-autoencoders-vaes-f70510919f73.
+
