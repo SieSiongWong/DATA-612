@@ -390,7 +390,7 @@ runtime
 
 # Conclusion
 
-From the evaluation results, we can see that the Spark ALS recommender system has lower RMSE, MSE, and MAE values than the Recommenderlab ALS recommender system. However, the running time is significant higher for Spark in training the model while much lower in predicting the model. For predicting the Top N recommendations, again the Recommenderlab is beating the Spark. For predicting the top 5 recommendations, Spark took 88.28 seconds while the Recommenderlab only took 56.66 seconds. 
+From the evaluation results, we can see that the Spark ALS recommender system has lower RMSE, MSE, and MAE values than the Recommenderlab ALS recommender system. However, the running time is significant higher for Spark in training the model while much lower in predicting the model. For predicting the Top N recommendations, again the Recommenderlab is beating the Spark. Spark took longer time to predict the top 5 recommendations than the Recommenderlab.
 
 The distributed system is much slower in training could be because the algorithm repeatedly processes training data to refine the model parameters until an acceptable solution is found given properly bounded errors. On the other hand, since the data used can fit in a single machine's memory, so the Recommenderlab is the winner in the training process. However, Spark is much faster in predicting because it can cache the intermediate computation results in memory rather than dumping all results to the disk which involves much slower disk I/O.
 
